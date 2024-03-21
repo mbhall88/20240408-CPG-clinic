@@ -1,62 +1,74 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>University of Melbourne</title>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/uom.css">
+	<title>University of Melbourne</title>
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	<link rel="stylesheet" href="dist/reset.css">
+	<link rel="stylesheet" href="dist/reveal.css">
+	<link rel="stylesheet" href="dist/theme/uom.css">
 
-		<!--    ============ Border ============               -->
-		<div class="line top"></div>
-		<div class="line bottom"></div>
-<!--		<div class="line left"></div>-->
-<!--		<div class="line right"></div>-->
-		<!--    ================================               -->
+	<!-- Theme used for syntax highlighted code -->
+	<link rel="stylesheet" href="plugin/highlight/monokai.css">
 
-		<!--    ============ Logos ============               -->
-        <!-- <img src="./imgs/logos/doherty.jpg" id="dohertyLogo"> -->
-        <!-- <img src="./imgs/logos/csi.png" id="dohertyLogo"> -->
-		<img src="./imgs/logos/uom.svg" id="uomLogo">
-		<!--    ================================               -->
+	<!--    ============ Border ============               -->
+	<div class="line top"></div>
+	<div class="line bottom"></div>
+	<!--		<div class="line left"></div>-->
+	<!--		<div class="line right"></div>-->
+	<!--    ================================               -->
 
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2
-						<aside class="notes">
-						<p>Some notes</p>
-						</aside>
-						<p>Some slide text</p>
-						<aside class="notes">
-						<p>and some more notes</p>
-					</aside>
-				</section>
-			</div>
+	<!--    ============ Logos ============               -->
+	<img src="./imgs/logos/doherty.jpg" id="dohertyLogo">
+	<!-- <img src="./imgs/logos/csi.png" id="dohertyLogo"> -->
+	<img src="./imgs/logos/uom.svg" id="uomLogo">
+	<!--    ================================               -->
+
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<h3>Evaluating Nanopore-based bacterial variant calling</h3>
+				<!-- add horiztonal line -->
+				<hr>
+				<p>Michael Hall</p>
+				<!-- add QR code image and link it to the DOI URL when clicked -->
+				<a href="https://doi.org/10.1101/2024.03.15.585313" target="_blank">
+					<img src="./imgs/qr.png" id="qrCode">
+				</a>
+			</section>
+			<section>Slide 2
+				<aside class="notes">
+					<p>Some notes</p>
+				</aside>
+				<p>Some slide text</p>
+				<aside class="notes">
+					<p>and some more notes</p>
+				</aside>
+			</section>
 		</div>
+	</div>
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
+	<script src="dist/reveal.js"></script>
+	<script src="plugin/notes/notes.js"></script>
+	<script src="plugin/markdown/markdown.js"></script>
+	<script src="plugin/highlight/highlight.js"></script>
+	<script>
+		// More info about initialization & config:
+		// - https://revealjs.com/initialization/
+		// - https://revealjs.com/config/
+		Reveal.initialize({
+			hash: true,
 
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+			// Learn about plugins: https://revealjs.com/plugins/
+			plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+		});
+	</script>
+</body>
+
 </html>
