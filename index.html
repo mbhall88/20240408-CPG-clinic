@@ -42,14 +42,107 @@
 					<img src="./imgs/qr.png" id="qrCode">
 				</a>
 			</section>
-			<section>Slide 2
-				<aside class="notes">
-					<p>Some notes</p>
-				</aside>
-				<p>Some slide text</p>
-				<aside class="notes">
-					<p>and some more notes</p>
-				</aside>
+			<section>
+				<h3>Data</h3>
+				<ul>
+					<li>14 bacterial species</li>
+					<!-- add a nested list -->
+					<ul style="font-size: 0.5em; font-style: italic; display: flex; flex-wrap: wrap;">
+						<li style="flex-basis: 50%;">Campylobacter jejuni</li>
+						<li style="flex-basis: 50%;">Campylobacter lari</li>
+						<li style="flex-basis: 50%;">Escherichia coli</li>
+						<li style="flex-basis: 50%;">Klebsiella pneumoniae</li>
+						<li style="flex-basis: 50%;">Klebsiella variicola</li>
+						<li style="flex-basis: 50%;">Listeria monocytogenes</li>
+						<li style="flex-basis: 50%;">Listeria ivanovii</li>
+						<li style="flex-basis: 50%;">Listeria welshimeri</li>
+						<li style="flex-basis: 50%;">Mycobacterium tuberculosis</li>
+						<li style="flex-basis: 50%;">Salmonella enterica</li>
+						<li style="flex-basis: 50%;">Staphylococcus aureus</li>
+						<li style="flex-basis: 50%;">Strepococcus pyogenes</li>
+						<li style="flex-basis: 50%;">Strepococcus dysgalactiae</li>
+						<li style="flex-basis: 50%;">Vibrio parahaemolyticus</li>
+					</ul>
+					<li>ONT R10.4.1 @ 5kHz sampling rate</li>
+					<li>Simplex and duplex</li>
+					<li>fast, hac, and sup</li>
+				</ul>
+			</section>
+			<section>
+				<h3>Read-level accuracy</h3>
+				<img src="./imgs/read_identity.png" id="accuracy">
+			</section>
+			<section>
+				<h3>Create variant truthset</h3>
+				<ul>
+					<li>Select variant donor</li>
+					<li>Find differences between reference and donor</li>
+					<li>Apply differences to reference</li>
+				</ul>
+				<!-- short link to https://github.com/mbhall88/NanoVarBench/blob/main/workflow/scripts/create_mutref.py -->
+				<a href="https://github.com/mbhall88/NanoVarBench/blob/main/workflow/scripts/create_mutref.py"
+					target="_blank">
+					<p style="font-size: 0.4em">
+						https://github.com/mbhall88/NanoVarBench/blob/main/workflow/scripts/create_mutref.py</p>
+				</a>
+			</section>
+			<section>
+				<section>
+					<h3>Select variant donor</h3>
+					<h4>Download genomes</h4>
+					<p><a href="https://github.com/pirovc/genome_updater" target="_blank">github.com/pirovc/genome_updater</a></p>
+					<pre>
+						<code data-trim>
+							$ genome_updater.sh \
+								-d refseq \
+								-M ncbi \
+								-T 1773 \
+								-A "species:10000" \
+								-l "" \
+								[other opts]
+						</code>
+					</pre>
+				</section>
+				<section>
+					<h3>Select variant donor</h3>
+					<h4>Filter on assembly statistics</h4>
+					<p><a href="https://github.com/ncbi/datasets" target="_blank">github.com/ncbi/datasets</a></p>
+					<pre>
+						<code data-trim class="language-bash">
+							$ datasets summary genome accession \
+								--inputfile genome_accessions.txt
+						</code>
+					</pre>
+					<pre>
+						<code data-trim class="language-bash">
+							$ datasets summary genome accession GCF_001200555.1 |
+								jq '.reports' | jq '.[0]' | jq '.checkm_info'
+						</code>
+					</pre>
+					<pre>
+						<code data-trim class="language-json">
+							{
+								"checkm_marker_set": "Mycobacterium tuberculosis",
+								"checkm_marker_set_rank": "species",
+								"checkm_species_tax_id": 1773,
+								"checkm_version": "v1.2.2",
+								"completeness": 97.35,
+								"completeness_percentile": 45.988846,
+								"contamination": 1.38
+							}
+						</code>
+					</pre>
+				</section>	
+				<section>
+					<h3>Select variant donor</h3>
+					<h4>Find closest ANI</h4>
+					<p><a href="https://github.com/bluenote-1577/skani" target="_blank">github.com/bluenote-1577/skani</a></p>
+					<pre>
+						<code data-trim>
+							$ skani
+						</code>
+					</pre>
+				</section>
 			</section>
 		</div>
 	</div>
