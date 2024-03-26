@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<title>University of Melbourne</title>
+	<title>Evaluating Nanopore-based bacterial variant calling</title>
 
 	<link rel="stylesheet" href="dist/reset.css">
 	<link rel="stylesheet" href="dist/reveal.css">
@@ -37,10 +37,22 @@
 				<!-- add horiztonal line -->
 				<hr>
 				<p>Michael Hall</p>
-				<!-- add QR code image and link it to the DOI URL when clicked -->
-				<a href="https://doi.org/10.1101/2024.03.15.585313" target="_blank">
-					<img src="./imgs/qr.png" id="qrCode">
-				</a>
+				<p><a href="https://mbh.sh/20240408-CPG-clinic/" target="_blank">mbh.sh/20240408-CPG-clinic</a></p>
+				<!-- Add a div to contain the images -->
+				<div style="display:inline-flex">
+					<figure>
+					<a href="https://doi.org/10.1101/2024.03.15.585313" target="_blank">
+						<img src="./imgs/qr.png" id="qrCode">
+					</a>
+					</figure>
+				
+					<figure>
+					<a href="https://mbh.sh/20240408-CPG-clinic/" target="_blank">
+						<img src="./imgs/frame.png">
+					</a>
+
+					</figure>
+				</div>
 			</section>
 			<section>
 				<h3>Data</h3>
@@ -66,12 +78,14 @@
 					<li>ONT R10.4.1 @ 5kHz sampling rate</li>
 					<li>Simplex and duplex</li>
 					<li>fast, hac, and sup</li>
+					<li>Perfect assemblies  <img src="./imgs/wick.jpg" style="height: 40px; vertical-align: bottom;"></li>
 				</ul>
 			</section>
 			<section>
 				<h3>Read-level accuracy</h3>
 				<img src="./imgs/read_identity.png" id="accuracy">
 			</section>
+
 			<section>
 				<h3>Create variant truthset</h3>
 				<ul>
@@ -90,7 +104,8 @@
 				<section>
 					<h3>Select variant donor</h3>
 					<h4>Download genomes</h4>
-					<p><a href="https://github.com/pirovc/genome_updater" target="_blank">github.com/pirovc/genome_updater</a></p>
+					<p><a href="https://github.com/pirovc/genome_updater"
+							target="_blank">github.com/pirovc/genome_updater</a></p>
 					<pre>
 						<code data-trim>
 							$ genome_updater.sh \
@@ -132,17 +147,264 @@
 							}
 						</code>
 					</pre>
-				</section>	
+				</section>
+				<section>
+					<h3>Select variant donor</h3>
+					<h4>Filter on assembly statistics</h4>
+					<p>
+					<ul>
+						<li>Completeness &gt; 98% (96% for MTB and <em>L. ivanovii</em>)</li>
+						<li>Completeness percentile &gt; 2% (50% for MTB)</li>
+						<li>Contamination &lt; 5%</li>
+					</ul>
+					</p>
+				</section>
 				<section>
 					<h3>Select variant donor</h3>
 					<h4>Find closest ANI</h4>
-					<p><a href="https://github.com/bluenote-1577/skani" target="_blank">github.com/bluenote-1577/skani</a></p>
+					<p><a href="https://github.com/bluenote-1577/skani"
+							target="_blank">github.com/bluenote-1577/skani</a></p>
 					<pre>
-						<code data-trim>
-							$ skani
+						<code data-trim class="language-bash">
+							$ skani sketch -o sketchdir -t 8 -l fofn.txt
+							$ skani search -o ani.tsv -t 8 -d sketchdir -q ref.fna 
 						</code>
 					</pre>
+					<p class="fragment"><code style="color: black;">skani search</code> instead of <code
+							style="color: black;">skani dist</code> for better memory usage. 6GB vs 95GB on GTDB.</p>
+					<p class="fragment">Donor is genome closest to 99.5% ANI and 98.4&lt;ANI&lt;99.8</p>
 				</section>
+			</section>
+			<section>
+				<section>
+					<h3>Find differences between reference and donor</h3>
+					<h4>minimap2</h4>
+					<pre>
+						<code data-trim class="language-bash">
+							$ minimap2 -ax asm5/10 \
+								-c --cs \
+								--secondary=no ref.fna donor.fna |
+								sort -k6,6 -k8,8n |
+								paftools.js call -l50 -L50 -f ref.fna - |
+								bcftools sort -o mm2.vcf.gz --write-index - 
+						</code>
+					</pre>
+					<p>
+					<ul>
+						<li><code style="color: black;">asm5</code> for average ANI 99.90, <code
+								style="color: black;">asm10</code> for average ANI 99.0</li>
+						<li><code style="color: black;">-c --cs</code> for base-level alignment</li>
+						<li><code style="color: black;">-l50</code> min. aln len. for coverage and <code
+								style="color: black;">-L50</code> min. aln. len. to call variants</li>
+					</ul>
+					</p>
+				</section>
+				<section>
+					<h3>Find differences between reference and donor</h3>
+					<h4>mummer4</h4>
+					<pre>
+						<code data-trim class="language-bash">
+							$ nucmer --maxmatch --delta  nucmer.delta ref.fna donor.fna
+							$ delta-filter -1 nucmer.delta > nucmer.1delta
+							$ show-snps -rlTHC nucmer.1delta > nucmer.snps
+						</code>
+					</pre>
+					<p>
+					<ul>
+						<li><code style="color: black;">--maxmatch</code> use all matches regradless of uniqueness</li>
+						<li><code style="color: black;">-C</code> don't report SNPs from ambiguous mappings</li>
+					</ul>
+					</p>
+				</section>
+				<section>
+					<h3>Find differences between reference and donor</h3>
+					<h4>Merge minimap2 and mummer4</h4>
+					<pre>
+						<code data-trim class="language-bash">
+							$ bcftools norm -f ref.fna -a -c e -m - mm2.vcf.gz |
+								bcftools norm -aD |
+								bcftools +remove-overlaps - |
+								bcftools +setGT - -- -t a -n c:1 |  # make genotypes haploid ALT
+								bcftools filter -e 'abs(ILEN)>50' -o mm2.filter.vcf.gz
+						</code>
+					</pre>
+					<p>
+					<ul>
+						<li><code style="color: black;">-a</code> atomize complex variants</li>
+						<li><code style="color: black;">-c e</code> exit if REF allele wrong</li>
+						<li><code style="color: black;">-m -</code> split multiallelics</li>
+						<li><code style="color: black;">-D</code> remove duplicates</li>
+					</ul>
+					</p>
+				</section>
+				<section>
+					<h3>Find differences between reference and donor</h3>
+					<h4>Merge minimap2 and mummer4</h4>
+					<pre>
+						<code data-trim class="language-bash">
+							$ bcftools isec -c none -p outdir \
+								mm2.filter.vcf.gz nucmer.filter.vcf.gz
+							$ bcftools view -o apply.vcf.gz outdir/0002.vcf
+						</code>
+					</pre>
+					<p>
+					<ul>
+						<li><code style="color: black;">-c none</code> only records with identical REF and ALT alleles
+							are compatible</li>
+					</ul>
+					</p>
+				</section>
+			</section>
+			<section>
+				<section>
+					<h3>Apply differences to reference</h3>
+					<h4>bcftools consensus</h4>
+					<pre>
+						<code data-trim class="language-bash">
+							$ bcftools consensus -f ref.fna apply.vcf.gz > mutref.fna
+						</code>
+					</pre>
+					Then <a
+						href="https://github.com/mbhall88/NanoVarBench/blob/31d9f07e9de04f0accdf30b666d69ae71069559a/workflow/scripts/create_mutref.py#L986-L1012"
+						target="_blank">invert the VCF</a> to create the truthset
+					<a href="https://zenodo.org/doi/10.5281/zenodo.10867170" target="_blank">
+						<p style="font-size: 0.4em">
+							https://zenodo.org/doi/10.5281/zenodo.10867170</p>
+					</a>
+				</section>
+			</section>
+			<section>
+				<img src="./imgs/table.png" id="mutrefSummary">
+			</section>
+			<section>
+				<h3>Variant calling</h3>
+				<ul>
+					<li><a hre="https://samtools.github.io/bcftools/bcftools.html" target="_blank">BCFtools</a></li>
+					<li><a hre="https://github.com/HKU-BAL/Clair3" target="_blank">Clair3</a></li>
+					<li><a hre="https://github.com/google/deepvariant" target="_blank">DeepVariant</a></li>
+					<li><a hre="https://github.com/freebayes/freebayes" target="_blank">FreeBayes</a></li>
+					<li><a hre="https://github.com/pjedge/longshot" target="_blank">Longshot</a></li>
+					<li><a hre="https://github.com/WGLab/NanoCaller" target="_blank">NanoCaller</a></li>
+				</ul>
+			</section>
+			<section>
+				<h3>Assessing variant calls</h3>
+				<a href="https://doi.org/10.1038/s41467-023-43876-x" target="_blank"><img src="./imgs/vcfdist.png"
+						id="vcfdist" style="height: 550px;"></a>
+				<p><a href="https://github.com/TimD1/vcfdist" target="_blank">github.com/TimD1/vcfdist</a></p>
+			</section>
+			<section>
+				<h3>Best F1 Score</h3>
+				<img src="./imgs/f1.png" id="f1" style="height: 550px;">
+			</section>
+			<section>
+				<section>
+					<h3>Illumina missed calls</h3>
+					<img src="./imgs/false_calls.png" id="illumina" style="height: 550px;">
+				</section>
+				<section>
+					<h3>Identifying repetitive regions</h3>
+					<pre>
+						<code data-trim class="language-bash">
+							$ nucmer --maxmatch --nosimplify --delta nucmer.delta \
+								-l 20 ref.fna ref.fna
+							$ show-coords -rTH -I 60 nucmer.delta | 
+								awk '{if ($1 != $3 && $2 != $4) print $0}' | 
+								awk '{print $8"\t"$1"\t"$2}' |
+								sort -k1,1 -k2,2n |
+								bedtools merge -i - > repeats.bed
+						</code>
+					</pre>
+					<p>
+						<ul>
+							<li><code style="color: black;">--nosimplify</code> don't simplify alignments by removing shadowed clusters</li>
+							<li><code style="color: black;">-l 20</code> min. length of single exact match</li>
+							<li><code style="color: black;">-I 60</code> min. percent identity</li>
+						</ul>
+						</p>
+					<p style="font-size: 0.4em">
+						<a href="https://github.com/mbhall88/NanoVarBench/blob/31d9f07e9de04f0accdf30b666d69ae71069559a/workflow/scripts/variant_density.py"
+							target="_blank">
+							https://github.com/mbhall88/NanoVarBench/workflow/scripts/variant_density.py
+						</a>
+					</p>
+				</section>
+				<section>
+					<h3>Dense variation pileup</h3>
+					<img src="./imgs/density-pileup.png" id="dense" style="height: 550px;">
+				</section>
+				<section>
+					<h3>Repetitive region pileup</h3>
+					<img src="./imgs/repetitive-pileup.png" id="repeat" style="height: 550px;">
+				</section>
+			</section>
+			<section>
+				<h3>ONT homopolymers</h3>
+				<img src="./imgs/homopolymer.png" id="homopolymers" style="height: 500px;">
+				<p style="font-size: 0.4em">
+					<a href="https://github.com/mbhall88/NanoVarBench/blob/580f44136174beb873de3ad839386a91817d77d8/workflow/scripts/annotate_homopolymers.py"
+						target="_blank">
+						https://github.com/mbhall88/NanoVarBench/workflow/scripts/annotate_homopolymers.py
+					</a>
+				</p>
+			</section>
+			<section>
+				<section>
+					<h3>How low can you go? (SNPs)</h3>
+					<img src="./imgs/depth.snps.png" id="depth-snps" style="height: 550px;">
+				</section>
+				<section>
+					<h3>How low can you go? (indels)</h3>
+					<img src="./imgs/depth.indels.png" id="depth-indels" style="height: 550px;">
+				</section>
+			</section>
+			<section>
+				<section>
+					<h3>Resource usage</h3>
+					<img src="./imgs/bench.png" id="resource" style="height: 550px;">
+				</section>
+				<section>
+					<h3>Resource usage - basecalling</h3>
+					<img src="./imgs/gpu.png" id="resource" style="height: 550px;">
+					<p style="font-size: 0.4em">Courtesy Eike</p>
+				</section>
+			</section>
+			<section>
+				<h3>Conclusions</h3>
+				<ul>
+					<li class="fragment">Use sup model</li>
+					<li class="fragment">ONT read-level accuracy &gt;Q20</li>
+					<li class="fragment">Use Clair3 - better than Illumina</li>
+					<li class="fragment">Homopolymer-induced errors not a major worry</li>
+					<li class="fragment">You can go surprisingly low with depth (10x if feeling brave, 25x otherwise)</li>
+				</ul>
+			</section>
+			<section>
+				<h3>Acknowledgements</h3>
+				<ul style="display: flex; flex-wrap: wrap;">
+					<li style="flex-basis: 50%;">Ryan Wick</li>
+					<li style="flex-basis: 50%;">Louise Judd</li>
+					<li style="flex-basis: 50%;">An Nguyen</li>
+					<li style="flex-basis: 50%;">Ouli Xie</li>
+					<li style="flex-basis: 50%;">Mark Davies</li>
+					<li style="flex-basis: 50%;">Eike Steinig</li>
+					<li style="flex-basis: 50%;">Torsten Seemann</li>
+					<li style="flex-basis: 50%;">Tim Stinear</li>
+					<li style="flex-basis: 50%;">Lachlan Coin</li>
+				</ul>
+			</section>
+			<section>
+				<h3>Questions?</h3>
+				<p><a href="https://mbh.sh/20240408-CPG-clinic/" target="_blank">mbh.sh/20240408-CPG-clinic</a></p>
+				<a href="https://doi.org/10.1101/2024.03.15.585313" target="_blank">
+					<img src="./imgs/qr.png" id="qrCode">
+				</a>
+				<a href="https://mbh.sh/20240408-CPG-clinic/" target="_blank"><img src="./imgs/frame.png"></a>
+			</section>
+			<!-- extra slides -->
+			<section>
+				<h3>Precision-recall curves</h3>
+				<img src="./imgs/pr_curve.png" id="pr" style="height: 550px;">
 			</section>
 		</div>
 	</div>
