@@ -1,3 +1,5 @@
+# Evaluating Nanopore-based bacterial variant calling
+
 The [reveal.js][reveal] codebase for my slides for the CPG bioinformatics clinic at the Doherty Institute on 08/04/2024.
 
 These slides are based on my [University of Melbourne reveal.js template](https://github.com/mbhall88/unimelb-reveal-template).
