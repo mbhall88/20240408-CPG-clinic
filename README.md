@@ -2,6 +2,10 @@ The [reveal.js][reveal] codebase for my slides for the CPG bioinformatics clinic
 
 These slides are based on my [University of Melbourne reveal.js template](https://github.com/mbhall88/unimelb-reveal-template).
 
+## View online
+
+<https://mbh.sh/20240408-CPG-clinic/>
+
 ## Serve locally
 
 1. Install [Node.js][node]
